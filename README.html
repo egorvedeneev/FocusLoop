@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FocusLoop MVP — обзор</title>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "default" });
+    </script>
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --panel: #ffffff;
+        --text: #17202a;
+        --muted: #5e6b7a;
+        --line: #d9e0ea;
+        --accent: #2e6cff;
+        --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.55;
+      }
+
+      .page {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+
+      .hero,
+      .section {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+      }
+
+      .hero {
+        padding: 28px;
+        margin-bottom: 20px;
+      }
+
+      .section {
+        padding: 24px;
+        margin-bottom: 20px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin-top: 0;
+      }
+
+      h1 {
+        font-size: 34px;
+        margin-bottom: 8px;
+      }
+
+      h2 {
+        font-size: 24px;
+        margin-bottom: 12px;
+      }
+
+      h3 {
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      p,
+      li {
+        color: var(--text);
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .chips {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+      }
+
+      .chip {
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: #edf3ff;
+        border: 1px solid #d6e3ff;
+        color: #1f4db8;
+        font-size: 13px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 20px;
+      }
+
+      .grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+        background: #fbfcff;
+      }
+
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      }
+
+      pre {
+        overflow: auto;
+        padding: 16px;
+        border-radius: 14px;
+        background: #101623;
+        color: #ebf0ff;
+      }
+
+      .mermaid {
+        overflow-x: auto;
+        padding: 8px 0;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+        padding: 10px 8px;
+        vertical-align: top;
+      }
+
+      @media (max-width: 900px) {
+        .grid.two,
+        .grid.three {
+          grid-template-columns: 1fr;
+        }
+
+        .page {
+          padding: 20px 14px 60px;
+        }
+
+        h1 {
+          font-size: 28px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <h1>FocusLoop MVP</h1>
+        <p class="muted">
+          Персональная productivity-система для перегруженных knowledge workers. Это не обычный
+          task manager, а workflow-продукт, построенный вокруг цикла
+          <code>capture -&gt; clarify -&gt; do -&gt; review</code>.
+        </p>
+        <div class="chips">
+          <span class="chip">Project-first</span>
+          <span class="chip">Always next action</span>
+          <span class="chip">Blocked is not lost</span>
+          <span class="chip">Review over backlog</span>
+          <span class="chip">Веб + будущий mobile</span>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Цель продукта</h2>
+        <ul>
+          <li>Фиксировать входящие обязательства и идеи.</li>
+          <li>Разбирать их в проекты, следующие шаги, follow-up'ы и справочные сущности.</li>
+          <li>Держать каждый активный проект в движении за счет ясного next action.</li>
+          <li>Не терять заблокированную работу и возвращать ее по дате.</li>
+          <li>Смотреть на прогресс в недельном обзоре на уровне проектов.</li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2>Информационная архитектура</h2>
+        <div class="grid two">
+          <div>
+            <ul>
+              <li><code>Today</code></li>
+              <li><code>Inbox</code></li>
+              <li><code>Projects</code></li>
+              <li><code>Follow-ups</code></li>
+              <li><code>Weekly review</code></li>
+              <li><code>Reference</code></li>
+            </ul>
+          </div>
+          <div class="card">
+            <strong>UX-правила</strong>
+            <ul>
+              <li>Не показывать плоский список задач как главный рабочий экран.</li>
+              <li>Всегда объяснять, почему элемент требует внимания сейчас.</li>
+              <li>Явно различать active и blocked проекты.</li>
+              <li>Показывать на главном экране только несколько рекомендуемых действий.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mermaid">
+flowchart TD
+App[Приложение] --> Today
+App --> Inbox
+App --> Projects
+App --> FollowUps
+App --> WeeklyReview
+App --> Reference
+
+Projects --> ActiveProjects
+Projects --> BlockedProjects
+Projects --> DoneProjects
+
+ActiveProjects --> ProjectDetails
+BlockedProjects --> ProjectDetails
+DoneProjects --> ProjectDetails
+
+ProjectDetails --> NextAction
+ProjectDetails --> ActivityLog
+ProjectDetails --> RelatedPeople
+ProjectDetails --> RelatedTeams
+ProjectDetails --> RelatedServices
+ProjectDetails --> ProjectNotes
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Основные пользовательские сценарии</h2>
+        <div class="grid three">
+          <div class="card">
+            <h3>Today</h3>
+            <p>Понять, что требует внимания прямо сейчас, и выбрать из короткого списка.</p>
+          </div>
+          <div class="card">
+            <h3>Inbox Clarify</h3>
+            <p>Превратить сырое входящее в проект, следующий шаг, follow-up или reference.</p>
+          </div>
+          <div class="card">
+            <h3>Project Work</h3>
+            <p>Сделать текущий next action главным элементом экрана и упростить его обновление.</p>
+          </div>
+          <div class="card">
+            <h3>Blocked Follow-Up</h3>
+            <p>Безопасно поставить проект на ожидание, сохранить блокер и вернуть позже.</p>
+          </div>
+          <div class="card">
+            <h3>Weekly Review</h3>
+            <p>Увидеть движение, блокировки, застой и проекты без следующего шага.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Attention model</h2>
+        <div class="grid two">
+          <div>
+            <h3>Состояния</h3>
+            <ul>
+              <li><code>Overdue follow-up</code></li>
+              <li><code>Returned today</code></li>
+              <li><code>No next action</code></li>
+              <li><code>Stale project</code></li>
+              <li><code>Recommended next actions</code></li>
+              <li><code>Inbox waiting</code></li>
+            </ul>
+          </div>
+          <div>
+            <h3>Приоритет</h3>
+            <ol>
+              <li><code>Overdue follow-up</code></li>
+              <li><code>Returned today</code></li>
+              <li><code>No next action</code></li>
+              <li><code>Stale project</code></li>
+              <li><code>Recommended next actions</code></li>
+              <li><code>Inbox waiting</code></li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Рекомендуемый стек</h2>
+        <div class="grid two">
+          <div class="card">
+            <h3>Backend</h3>
+            <ul>
+              <li><code>FastAPI</code></li>
+              <li><code>PostgreSQL</code></li>
+              <li><code>SQLAlchemy + Alembic</code></li>
+              <li>Легкий scheduler / cron</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Frontend</h3>
+            <ul>
+              <li><code>Next.js</code></li>
+              <li><code>TypeScript</code></li>
+              <li><code>TanStack Query</code></li>
+              <li>UI-kit вроде <code>shadcn/ui</code></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Высокоуровневая архитектура</h2>
+        <p>Для MVP рекомендуется modular monolith: это быстрее и проще для первых итераций.</p>
+        <div class="mermaid">
+flowchart LR
+Web[Next.js Web] --> API[FastAPI API]
+Mobile[Flutter Future] --> API
+API --> DB[(PostgreSQL)]
+API --> Jobs[Scheduler or Background Jobs]
+Jobs --> DB
+        </div>
+        <div class="grid two">
+          <div class="card">
+            <h3>Backend-модули</h3>
+            <ul>
+              <li><code>auth</code></li>
+              <li><code>inbox</code></li>
+              <li><code>projects</code></li>
+              <li><code>project_actions</code></li>
+              <li><code>follow_ups</code></li>
+              <li><code>attention</code></li>
+              <li><code>reviews</code></li>
+              <li><code>reference</code></li>
+              <li><code>activity_log</code></li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Ключевые правила</h3>
+            <ul>
+              <li>Каждый active project обязан иметь текущий next action.</li>
+              <li>Blocked project обязан иметь валидный follow-up.</li>
+              <li><code>Today</code> вычисляется из attention states.</li>
+              <li><code>Weekly review</code> смотрит на проекты, а не на список задач.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>ER-диаграмма</h2>
+        <div class="mermaid">
+erDiagram
+    User ||--o{ Project : owns
+    User ||--o{ InboxItem : captures
+    User ||--o{ ProjectAction : creates
+    User ||--o{ FollowUp : manages
+    User ||--o{ ReferenceEntity : stores
+    User ||--o{ ActivityEvent : produces
+
+    Project ||--o{ ProjectAction : has
+    Project ||--o{ FollowUp : has
+    Project ||--o{ ProjectReferenceLink : links
+    ReferenceEntity ||--o{ ProjectReferenceLink : linked_to
+    Project ||--o{ ActivityEvent : generates
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Сущность</th>
+              <th>Назначение</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>Project</code></td>
+              <td>Главная единица работы.</td>
+            </tr>
+            <tr>
+              <td><code>ProjectAction</code></td>
+              <td>Конкретное действие внутри проекта, включая next action.</td>
+            </tr>
+            <tr>
+              <td><code>InboxItem</code></td>
+              <td>Сырое входящее, которое еще не разобрано.</td>
+            </tr>
+            <tr>
+              <td><code>FollowUp</code></td>
+              <td>Запись о блокировке и механизме возврата проекта.</td>
+            </tr>
+            <tr>
+              <td><code>ReferenceEntity</code></td>
+              <td>Люди, команды, сервисы и другие справочные сущности.</td>
+            </tr>
+            <tr>
+              <td><code>ActivityEvent</code></td>
+              <td>История изменений для таймлайнов, summary и review.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>REST API contract</h2>
+        <p>Базовый префикс: <code>/api/v1</code></p>
+        <div class="grid two">
+          <div class="card">
+            <h3>Ключевые endpoints</h3>
+            <ul>
+              <li><code>POST /projects</code></li>
+              <li><code>GET /projects?status=active</code></li>
+              <li><code>GET /projects/{project_id}</code></li>
+              <li><code>POST /projects/{project_id}/next-action</code></li>
+              <li><code>POST /project-actions/{action_id}/complete</code></li>
+              <li><code>POST /inbox-items/{id}/clarify</code></li>
+              <li><code>POST /projects/{project_id}/block</code></li>
+              <li><code>POST /projects/{project_id}/unblock</code></li>
+              <li><code>GET /today</code></li>
+              <li><code>GET /reviews/weekly</code></li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Правила API</h3>
+            <ul>
+              <li>Отдавать готовые payloads для <code>Today</code> и <code>Weekly review</code>.</li>
+              <li>Держать единый формат ошибок.</li>
+              <li>Проверять доменные ограничения на backend, а не только в UI.</li>
+            </ul>
+          </div>
+        </div>
+        <h3>Пример ошибки</h3>
+        <pre>{
+  "error": {
+    "code": "PROJECT_REQUIRES_NEXT_ACTION",
+    "message": "Active project must have a current next action",
+    "details": {}
+  }
+}</pre>
+      </section>
+
+      <section class="section">
+        <h2>Объем MVP</h2>
+        <div class="grid two">
+          <div class="card">
+            <h3>Входит</h3>
+            <ul>
+              <li>Inbox</li>
+              <li>Projects</li>
+              <li>Next actions</li>
+              <li>Blocked follow-ups</li>
+              <li>Today attention view</li>
+              <li>Weekly review</li>
+              <li>Reference entities</li>
+              <li>Activity log</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Не входит</h3>
+            <ul>
+              <li>Командная работа</li>
+              <li>Realtime</li>
+              <li>Продвинутая аналитика</li>
+              <li>Сложные интеграции</li>
+              <li>AI-функции</li>
+              <li>Тяжелая инфраструктура</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Документы</h2>
+        <ul>
+          <li><a href="./README.md">README.md</a></li>
+          <li><a href="./ARCHITECTURE.md">ARCHITECTURE.md</a></li>
+          <li><a href="./API.md">API.md</a></li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2>Процесс команды</h2>
+        <ul>
+          <li><a href="./docs/process/TEAM_GUIDELINES.md">docs/process/TEAM_GUIDELINES.md</a></li>
+          <li><a href="./docs/process/DEVELOPMENT_WORKFLOW.md">docs/process/DEVELOPMENT_WORKFLOW.md</a></li>
+          <li><a href="./docs/process/CODE_REVIEW_CHECKLIST.md">docs/process/CODE_REVIEW_CHECKLIST.md</a></li>
+          <li><a href="./docs/process/TASK_TEMPLATE.md">docs/process/TASK_TEMPLATE.md</a></li>
+          <li><a href="./docs/process/PR_TEMPLATE.md">docs/process/PR_TEMPLATE.md</a></li>
+          <li><a href="./docs/process/SCRUM_MASTER_GUIDELINES.md">docs/process/SCRUM_MASTER_GUIDELINES.md</a></li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2>Дизайн-артефакты</h2>
+        <ul>
+          <li><a href="./docs/ui-ux/01-ia-navigation.md">docs/ui-ux/01-ia-navigation.md</a></li>
+          <li><a href="./docs/ui-ux/02-core-user-flows.md">docs/ui-ux/02-core-user-flows.md</a></li>
+          <li><a href="./docs/ui-ux/03-critical-screen-wireframes.md">docs/ui-ux/03-critical-screen-wireframes.md</a></li>
+          <li><a href="./docs/ui-ux/04-states-and-attention-rules.md">docs/ui-ux/04-states-and-attention-rules.md</a></li>
+          <li><a href="./docs/ui-ux/05-lowfi-prototype.html">docs/ui-ux/05-lowfi-prototype.html</a></li>
+          <li><a href="./docs/ui-ux/06-mobile-lowfi-prototype.html">docs/ui-ux/06-mobile-lowfi-prototype.html</a></li>
+          <li><a href="./docs/ui-ux/07-mobile-ux-spec.md">docs/ui-ux/07-mobile-ux-spec.md</a></li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2>Следующие шаги</h2>
+        <ol>
+          <li>Зафиксировать доменную модель.</li>
+          <li>Зафиксировать REST-контракт для первых MVP-флоу.</li>
+          <li>Сгенерировать стартовые FastAPI-схемы и SQLAlchemy-модели.</li>
+          <li>Пересобрать спринты уже от архитектуры и контрактов.</li>
+        </ol>
+      </section>
+    </main>
+  </body>
+  </html>
