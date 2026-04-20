@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FocusLoop Mobile Low-fi Prototype</title>
+    <style>
+      :root {
+        --bg: #eef1f6;
+        --phone: #ffffff;
+        --line: #d9dee8;
+        --text: #16181d;
+        --muted: #677181;
+        --accent: #2e6cff;
+        --warn: #c67a12;
+        --danger: #c0392b;
+        --ok: #1f8b4c;
+        --shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(180deg, #f6f8fc 0%, #e9edf5 100%);
+        color: var(--text);
+      }
+
+      .page {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 24px 20px 48px;
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .toolbar h1 {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .toolbar p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .screen-picker {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--text);
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      button.active,
+      button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+
+      .panel {
+        background: rgba(255, 255, 255, 0.76);
+        border: 1px solid rgba(217, 222, 232, 0.9);
+        border-radius: 20px;
+        padding: 16px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      .panel h2 {
+        margin: 0 0 12px;
+        font-size: 16px;
+      }
+
+      .panel ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+      }
+
+      .panel li + li {
+        margin-top: 8px;
+      }
+
+      .phone-wrap {
+        display: flex;
+        justify-content: center;
+      }
+
+      .phone {
+        width: 390px;
+        min-height: 800px;
+        background: var(--phone);
+        border: 1px solid var(--line);
+        border-radius: 34px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .statusbar {
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: var(--muted);
+        border-bottom: 1px solid #f0f2f7;
+        background: #fafbfe;
+      }
+
+      .screen {
+        display: none;
+        min-height: 768px;
+        padding: 16px 16px 94px;
+        background: #f7f9fc;
+      }
+
+      .screen.active {
+        display: block;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .topbar h2 {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .sub {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .hero,
+      .card,
+      .sheet {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+      }
+
+      .hero,
+      .card {
+        padding: 14px;
+      }
+
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .section-title {
+        font-size: 13px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin: 6px 0 2px;
+      }
+
+      .chips,
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #f8fafc;
+        font-size: 12px;
+      }
+
+      .chip.warn {
+        color: var(--warn);
+        background: rgba(198, 122, 18, 0.08);
+        border-color: rgba(198, 122, 18, 0.25);
+      }
+
+      .chip.danger {
+        color: var(--danger);
+        background: rgba(192, 57, 43, 0.08);
+        border-color: rgba(192, 57, 43, 0.25);
+      }
+
+      .chip.ok {
+        color: var(--ok);
+        background: rgba(31, 139, 76, 0.08);
+        border-color: rgba(31, 139, 76, 0.25);
+      }
+
+      .card h3,
+      .hero h3 {
+        margin: 0 0 8px;
+        font-size: 16px;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .tabs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .tabs button {
+        padding: 8px 10px;
+      }
+
+      .field {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px;
+        background: #fbfcff;
+      }
+
+      .field label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .bottom-nav {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        padding: 12px;
+        border-top: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(12px);
+      }
+
+      .bottom-nav button {
+        font-size: 12px;
+        padding: 8px 6px;
+      }
+
+      .fab {
+        position: absolute;
+        right: 16px;
+        bottom: 76px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        padding: 0;
+        font-size: 26px;
+        line-height: 1;
+        box-shadow: var(--shadow);
+      }
+
+      .compact-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .list-item {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fbfcff;
+      }
+
+      .divider {
+        height: 1px;
+        background: #eef1f6;
+        margin: 12px 0;
+      }
+
+      @media (max-width: 980px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .phone-wrap {
+          justify-content: stretch;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <div class="toolbar">
+        <div>
+          <h1>FocusLoop Mobile Prototype</h1>
+          <p>Low-fi HTML-прототип мобильного клиента с feature parity относительно веба.</p>
+        </div>
+        <div class="screen-picker">
+          <button class="picker active" data-screen="today">Сегодня</button>
+          <button class="picker" data-screen="inbox">Входящие</button>
+          <button class="picker" data-screen="inbox-item">Clarify</button>
+          <button class="picker" data-screen="projects">Проекты</button>
+          <button class="picker" data-screen="project">Проект</button>
+          <button class="picker" data-screen="review">Review</button>
+          <button class="picker" data-screen="reference">Reference</button>
+        </div>
+      </div>
+
+      <div class="layout">
+        <aside class="panel">
+          <h2>Что покрывает прототип</h2>
+          <ul>
+            <li>Полный top-level mobile shell c `Today`, `Inbox`, `Projects`, `Review`, `More`.</li>
+            <li>Отдельные detail/action flows вместо desktop split-view.</li>
+            <li>Ключевые сценарии: attention, inbox clarify, project work, follow-up, weekly review.</li>
+            <li>Полный функциональный паритет на уровне основных сущностей и действий.</li>
+          </ul>
+        </aside>
+
+        <div class="phone-wrap">
+          <div class="phone">
+            <div class="statusbar">9:41 • LTE • 100%</div>
+
+            <section id="today" class="screen active">
+              <div class="topbar">
+                <div>
+                  <h2>Сегодня</h2>
+                  <div class="sub">Главный экран внимания</div>
+                </div>
+                <button data-screen="inbox">Inbox</button>
+              </div>
+
+              <div class="stack">
+                <div class="hero">
+                  <h3>3 требуют внимания сегодня</h3>
+                  <div class="chips">
+                    <span class="chip danger">1 overdue</span>
+                    <span class="chip warn">1 без next action</span>
+                    <span class="chip">5 входящих</span>
+                  </div>
+                  <div class="actions">
+                    <button class="primary" data-screen="review">Открыть review</button>
+                    <button data-screen="projects">Проекты</button>
+                  </div>
+                </div>
+
+                <div class="section-title">Срочно</div>
+                <div class="card">
+                  <div class="chips"><span class="chip danger">Overdue follow-up</span></div>
+                  <h3>Payments API migration</h3>
+                  <div class="muted">Ждем Anna Petrova. Дата возврата была 12 апреля.</div>
+                  <div class="actions">
+                    <button class="primary" data-screen="project">Открыть</button>
+                    <button data-screen="project">Follow-up</button>
+                  </div>
+                </div>
+
+                <div class="section-title">Вернулось сегодня</div>
+                <div class="card">
+                  <div class="chips"><span class="chip warn">Returned today</span></div>
+                  <h3>Contract sync</h3>
+                  <div class="muted">Пора проверить, получил ли юрист обновленный договор.</div>
+                  <div class="actions">
+                    <button data-screen="project">Проверить статус</button>
+                  </div>
+                </div>
+
+                <div class="section-title">Нет следующего шага</div>
+                <div class="card">
+                  <div class="chips"><span class="chip warn">No next action</span></div>
+                  <h3>Quarterly roadmap sync</h3>
+                  <div class="muted">Проект активен, но следующий шаг не определен.</div>
+                  <div class="actions">
+                    <button class="primary" data-screen="project">Определить next action</button>
+                  </div>
+                </div>
+
+                <div class="section-title">Входящие</div>
+                <div class="card">
+                  <h3>5 элементов ждут разбора</h3>
+                  <div class="muted">Открой inbox и пройди clarify flow.</div>
+                  <div class="actions">
+                    <button data-screen="inbox">Открыть входящие</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section id="inbox" class="screen">
+              <div class="topbar">
+                <div>
+                  <h2>Входящие</h2>
+                  <div class="sub">Список + режим по одному</div>
+                </div>
+                <button>+ Capture</button>
+              </div>
+
+              <div class="stack">
+                <div class="tabs">
+                  <button class="active">Список</button>
+                  <button>По одному</button>
+                  <button>Новые 5</button>
+                </div>
+
+                <div class="compact-list">
+                  <div class="list-item">
+                    <div class="row">
+                      <strong>manual</strong>
+                      <span class="muted">11:20</span>
+                    </div>
+                    <div>Нужно уточнить сроки у Ани по API.</div>
+                    <div class="actions">
+                      <button class="primary" data-screen="inbox-item">Открыть</button>
+                    </div>
+                  </div>
+
+                  <div class="list-item">
+                    <div class="row">
+                      <strong>idea</strong>
+                      <span class="muted">10:45</span>
+                    </div>
+                    <div>Сделать dependency map по платежному флоу.</div>
+                    <div class="actions">
+                      <button data-screen="inbox-item">Открыть</button>
+                    </div>
+                  </div>
+
+                  <div class="list-item">
+                    <div class="row">
+                      <strong>telegram</strong>
+                      <span class="muted">09:10</span>
+                    </div>
+                    <div>Надо обсудить rollout с соседней командой.</div>
+                    <div class="actions">
+                      <button data-screen="inbox-item">Открыть</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section id="inbox-item" class="screen">
+              <div class="topbar">
+                <div>
+                  <h2>Входящее</h2>
+                  <div class="sub">Clarify flow</div>
+                </div>
+                <button data-screen="inbox">Назад</button>
+              </div>
+
+              <div class="stack">
+                <div class="card">
+                  <div class="chips">
+                    <span class="chip">manual</span>
+                    <span class="chip">today 11:20</span>
+                  </div>
+                  <h3>Нужно уточнить сроки у Ани по API и понять, когда можно двигать rollout</h3>
+                </div>
+
+                <div class="card">
+                  <div class="section-title">Что это?</div>
+                  <div class="stack">
+                    <button>Новый проект</button>
+                    <button>Добавить next action</button>
+                    <button class="active">Создать follow-up</button>
+                    <button>Создать reference</button>
+                    <button>В архив</button>
+                  </div>
+                </div>
+
+                <div class="sheet" style="padding: 14px;">
+                  <div class="section-title">Форма follow-up</div>
+                  <div class="stack">
+                    <div class="field">
+                      <label>Проект</label>
+                      <div>Payments API migration</div>
+                    </div>
+                    <div class="field">
+                      <label>От кого/чего жду</label>
+                      <div>Anna Petrova</div>
+                    </div>
+                    <div class="field">
+                      <label>Почему</label>
+                      <div>Need ETA for API changes</div>
+                    </div>
+                    <div class="field">
+                      <label>Когда напомнить</label>
+                      <div>20 Apr</div>
+                    </div>
+                    <div class="field">
+                      <label>Что сделать при возврате</label>
+                      <div>Ping Anna in chat</div>
+                    </div>
+                    <button class="primary" data-screen="projects">Сохранить</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section id="projects" class="screen">
+              <div class="topbar">
+                <div>
+                  <h2>Проекты</h2>
+                  <div class="sub">Full feature parity</div>
+                </div>
+                <button>Search</button>
+              </div>
+
+              <div class="stack">
+                <div class="tabs">
+                  <button class="active">Active</button>
+                  <button>Blocked</button>
+                  <button>Done</button>
+                </div>
+
+                <div class="card">
+                  <div class="row">
+                    <h3 style="margin: 0;">Payments API migration</h3>
+                    <span class="chip danger">Overdue</span>
+                  </div>
+                  <div class="muted">Next: Ask infra team for rollout ETA</div>
+                  <div class="muted">Last activity: 2d ago</div>
+                  <div class="actions">
+                    <button class="primary" data-screen="project">Открыть</button>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="row">
+                    <h3 style="margin: 0;">Quarterly roadmap sync</h3>
+                    <span class="chip warn">No next action</span>
+                  </div>
+                  <div class="muted">Проект требует нового следующего шага.</div>
+                  <div class="actions">
+                    <button data-screen="project">Открыть</button>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="row">
+                    <h3 style="margin: 0;">Billing retry research</h3>
+                    <span class="chip warn">Stale</span>
+                  </div>
+                  <div class="muted">7 дней без движения.</div>
+                  <div class="actions">
+                    <button data-screen="project">Открыть</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section id="project" class="screen">
+              <div class="topbar">
+                <div>
+                  <h2>Project details</h2>
+                  <div class="sub">Центральный экран проекта</div>
+                </div>
+                <button data-screen="projects">Назад</button>
+              </div>
+
+              <div class="stack">
+                <div class="card">
+                  <h3>Payments API migration</h3>
+                  <div class="chips">
+                    <span class="chip">Active</span>
+                    <span class="chip danger">Overdue follow-up</span>
+                    <span class="chip">Last activity 2d ago</span>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="section-title">Current next action</div>
+                  <h3>Ask infra team for rollout ETA</h3>
+                  <div class="muted">Due: tomorrow</div>
+                  <div class="actions">
+                    <button class="primary">Сделано</button>
+                    <button>Изменить</button>
+                    <button>Заменить</button>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="section-title">Waiting / follow-up</div>
+                  <h3>Anna Petrova</h3>
+                  <div class="muted">Need ETA for API changes. Return: 20 Apr.</div>
+                  <div class="actions">
+                    <button class="primary">Отправить follow-up</button>
+                    <button>Перенести</button>
+                    <button>Вернуть в active</button>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="section-title">Действия</div>
+                  <div class="stack">
+                    <button>Поставить на ожидание</button>
+                    <button>Редактировать проект</button>
+                    <button>Добавить supporting action</button>
+                    <button data-screen="reference">Связать reference</button>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="row">
+                    <strong>История</strong>
+                    <span class="muted">v</span>
+                  </div>
+                  <div class="divider"></div>
+                  <div class="muted">Project blocked, next action updated, follow-up sent.</div>
+                </div>
+
+                <div class="card">
+                  <div class="row">
+                    <strong>Связанные сущности</strong>
+                    <span class="muted">v</span>
+                  </div>
+                  <div class="divider"></div>
+                  <div class="muted">Anna Petrova, Payments team, Billing service.</div>
+                </div>
+              </div>
+            </section>
+
+            <section id="review" class="screen">
+              <div class="topbar">
+                <div>
+                  <h2>Review</h2>
+                  <div class="sub">Недельный обзор</div>
+                </div>
+                <button>Week</button>
+              </div>
+
+              <div class="stack">
+                <div class="hero">
+                  <h3>Эта неделя: 6 moved, 2 blocked, 3 stale</h3>
+                  <div class="actions">
+                    <button class="primary">Завершить review</button>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="section-title">Продвинулось</div>
+                  <strong>Access policy cleanup</strong>
+                  <div class="muted">2 actions completed</div>
+                  <div class="actions">
+                    <button data-screen="project">Открыть</button>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="section-title">Все еще заблокировано</div>
+                  <strong>Payments API migration</strong>
+                  <div class="muted">Waiting on Anna Petrova</div>
+                  <div class="actions">
+                    <button data-screen="project">Открыть</button>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="section-title">Без движения</div>
+                  <strong>Billing retry research</strong>
+                  <div class="muted">No movement in 7 days</div>
+                  <div class="actions">
+                    <button data-screen="project">Исправить</button>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="section-title">Без следующего шага</div>
+                  <strong>Quarterly roadmap sync</strong>
+                  <div class="muted">Needs a new next action</div>
+                  <div class="actions">
+                    <button class="primary" data-screen="project">Открыть проект</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section id="reference" class="screen">
+              <div class="topbar">
+                <div>
+                  <h2>Reference</h2>
+                  <div class="sub">Справочник и связи</div>
+                </div>
+                <button>Search</button>
+              </div>
+
+              <div class="stack">
+                <div class="tabs">
+                  <button class="active">People</button>
+                  <button>Teams</button>
+                  <button>Services</button>
+                </div>
+
+                <div class="card">
+                  <h3>Anna Petrova</h3>
+                  <div class="muted">Backend owner for payments API</div>
+                  <div class="actions">
+                    <button>Открыть</button>
+                    <button class="primary" data-screen="project">Связать с проектом</button>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <h3>Payments team</h3>
+                  <div class="muted">Команда, ответственная за платежный контур.</div>
+                  <div class="actions">
+                    <button>Открыть</button>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <h3>Billing service</h3>
+                  <div class="muted">Ключевой сервис для retry policy и API migration.</div>
+                  <div class="actions">
+                    <button>Открыть</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <button class="fab primary" title="Capture">+</button>
+
+            <div class="bottom-nav">
+              <button class="nav active" data-screen="today">Today</button>
+              <button class="nav" data-screen="inbox">Inbox</button>
+              <button class="nav" data-screen="projects">Projects</button>
+              <button class="nav" data-screen="review">Review</button>
+              <button class="nav" data-screen="reference">More</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const screens = document.querySelectorAll(".screen");
+      const navButtons = document.querySelectorAll("[data-screen]");
+      const pickers = document.querySelectorAll(".picker");
+      const bottomNav = document.querySelectorAll(".nav");
+
+      function activateScreen(id) {
+        screens.forEach((screen) => {
+          screen.classList.toggle("active", screen.id === id);
+        });
+
+        pickers.forEach((button) => {
+          button.classList.toggle("active", button.dataset.screen === id);
+        });
+
+        bottomNav.forEach((button) => {
+          const target = button.dataset.screen;
+          button.classList.toggle("active", target === id || (target === "reference" && id === "reference"));
+        });
+      }
+
+      navButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const target = button.dataset.screen;
+          if (target) activateScreen(target);
+        });
+      });
+    </script>
+  </body>
+  </html>
